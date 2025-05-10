@@ -1,5 +1,9 @@
 const transactionModel = require('../models/transaction.model')
 const categoryModel = require('../models/category.model')
+const budgetGoalsModel = require('../models/budgetGoals.model')
+const mongoose = require('mongoose')
+const { Types } = mongoose
+const { ObjectId } = Types
 
 
 module.exports.create = async (req, inputData) => {
@@ -309,3 +313,50 @@ module.exports.delete = async (_id) => {
         return { success: false, message: 'Internal server error', error };
     }
 }
+module.exports.getBudget = async (userId, month, year) => {
+    const result = await budgetGoalsModel.findOne({ userId, month, year }).lean();
+    console.log("result", result)
+    return result;
+};
+
+module.exports.expenseGraphOfSetBudget = async (userId, startDate, endDate) => {
+    console.log(userId)
+    console.log(startDate)
+    console.log(endDate)
+    const data = await transactionModel.aggregate([
+        {
+            $match: {
+                createdBy: new ObjectId(userId),
+                type: 'Expense',
+                transactionDate: { $gte: startDate, $lte: endDate }
+            }
+        },
+        {
+            $group: {
+                _id: {
+                    year: { $year: "$transactionDate" },
+                    month: { $month: "$transactionDate" },
+                    day: { $dayOfMonth: "$transactionDate" }
+                },
+                amount: { $sum: "$amount" }
+            }
+        },
+        {
+            $project: {
+                _id: 0,
+                transactionDate: {
+                    $dateFromParts: {
+                        year: "$_id.year",
+                        month: "$_id.month",
+                        day: "$_id.day"
+                    }
+                },
+                amount: 1
+            }
+        },
+        {
+            $sort: { transactionDate: 1 }
+        }
+    ]);
+    return data;
+};

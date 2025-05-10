@@ -222,3 +222,54 @@ module.exports.delete = async (req, res) => {
         response.catchError(res, 'Catch Error In update', error.message)
     }
 }
+
+module.exports.setBudgetOfExpenseGraph = async (req, res) => {
+    try {
+        const { month, year } = req.query;
+        const userId = req.userId;
+
+        const budgetData = await transactionService.getBudget(userId, month, year);
+
+        if (!budgetData) {
+            return response.errorResponse(res, 'No budget set for this month');
+        }
+
+        const monthNumber = budgetData.monthOfNumber;
+        const paddedMonth = monthNumber.toString().padStart(2, '0');
+        const budgetAmount = budgetData.budgetAmount;
+
+        const totalDays = moment(`${year}-${monthNumber}`, 'YYYY-M').daysInMonth();
+        const safeExpenseLimit = Math.floor(budgetAmount / totalDays);
+
+        const startDate = new Date(`${year}-${paddedMonth}-01T00:00:00.000Z`);
+        const endDate = new Date(moment(startDate).endOf('month').toISOString());
+
+        const expenseByDate = await transactionService.expenseGraphOfSetBudget(userId, startDate, endDate);
+        if (expenseByDate) {
+            const dailyExpenses = [];
+            for (let i = 1; i <= totalDays; i++) {
+                const date = moment(`${year}-${monthNumber}-${i}`, 'YYYY-M-D').startOf('day');
+                const found = expenseByDate.find(item =>
+                    moment(item.transactionDate).isSame(date, 'day')
+                );
+
+                const amount = found?.amount || 0;
+                dailyExpenses.push({
+                    transactionDate: date.format('YYYY-MM-DD'),
+                    amount,
+                    status: amount > safeExpenseLimit ? 'OverLimit' : 'UnderLimit'
+                });
+            }
+
+            return response.successResponse(res, 'Data fetched successfully', {
+                budgetAmount,
+                safeExpenseLimit,
+                expense: dailyExpenses
+            });
+        }
+
+    } catch (error) {
+        console.error('Error in setBudgetOfExpenseGraph:', error);
+        return response.catchError(res, 'Server error', error.message);
+    }
+}
