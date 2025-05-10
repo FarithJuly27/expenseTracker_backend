@@ -238,6 +238,7 @@ module.exports.setBudgetOfExpenseGraph = async (req, res) => {
         const paddedMonth = monthNumber.toString().padStart(2, '0');
         const budgetAmount = budgetData.budgetAmount;
 
+
         const totalDays = moment(`${year}-${monthNumber}`, 'YYYY-M').daysInMonth();
         const safeExpenseLimit = Math.floor(budgetAmount / totalDays);
 
@@ -252,7 +253,6 @@ module.exports.setBudgetOfExpenseGraph = async (req, res) => {
                 const found = expenseByDate.find(item =>
                     moment(item.transactionDate).isSame(date, 'day')
                 );
-
                 const amount = found?.amount || 0;
                 dailyExpenses.push({
                     transactionDate: date.format('YYYY-MM-DD'),
@@ -262,8 +262,12 @@ module.exports.setBudgetOfExpenseGraph = async (req, res) => {
             }
 
             return response.successResponse(res, 'Data fetched successfully', {
-                budgetAmount,
+                expenseTargetAmount: budgetAmount,
+                month,
+                year,
+                monthOfNumber: monthNumber,
                 safeExpenseLimit,
+                totalDaysInMonth: totalDays,
                 expense: dailyExpenses
             });
         }

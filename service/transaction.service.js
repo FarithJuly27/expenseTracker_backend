@@ -320,9 +320,6 @@ module.exports.getBudget = async (userId, month, year) => {
 };
 
 module.exports.expenseGraphOfSetBudget = async (userId, startDate, endDate) => {
-    console.log(userId)
-    console.log(startDate)
-    console.log(endDate)
     const data = await transactionModel.aggregate([
         {
             $match: {
