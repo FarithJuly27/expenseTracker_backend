@@ -4,14 +4,10 @@ const groupService = require('../../service/groupInvestment/group.service')
 module.exports.create = async (req, res) => {
     try {
         const { ...inputData } = req.body
-        // const exist = await groupService.findExist(inputData.groupName)
-        // if (!exist) {
         const result = await groupService.create(req, inputData)
         if (result._id) {
             response.successResponse(res, 'Group Created SuccessFully', result)
         } else return response.errorResponse(res, 'Group Creation Failed')
-        // } else
-        //     return response.alreadyExist(res, 'Already Exist Group')
     } catch (error) {
         console.error('Controller Signup Error:', error);
         response.catchError(res, 'Catch Error In SignUp', error.message)

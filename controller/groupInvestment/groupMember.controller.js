@@ -1,27 +1,83 @@
 const response = require('../../helper/response')
 const groupMemberService = require('../../service/groupInvestment/groupMember.service')
+const mongoose = require('mongoose')
+const { Types } = mongoose
+const { ObjectId } = Types
 
-module.exports.create = async (req, res) => {
+module.exports.inviteMembers = async (req, res) => {
     try {
-        const { ...inputData } = req.body
-        const result = await groupMemberService.create(req, inputData)
-        if (result._id) {
-            response.successResponse(res, 'Group Member Created SuccessFully', result)
-        } else return response.errorResponse(res, 'Group Member Creation Failed')
+        const inputData = req.body;
+        const result = await groupMemberService.inviteMembers(req, inputData);
+
+        if (result.success) {
+            response.successResponse(res, 'Group members invited successfully', {
+                addedCount: result.addedCount
+            });
+        } else {
+            response.errorResponse(res, 'Group member invitation failed');
+        }
     } catch (error) {
-        console.error('Controller Signup Error:', error);
-        response.catchError(res, 'Catch Error In SignUp', error.message)
+        console.error('Controller Invite Error:', error);
+        response.catchError(res, 'Catch Error In Invite', error.message);
     }
-}
+};
+
+module.exports.respondToGroupInvite = async (req, res) => {
+    try {
+        const { groupId, inviteResponse } = req.body;
+        const userId = req.userId;
+
+        const member = await groupMemberService.MatchInviteMember(groupId, userId);
+
+        if (!member) {
+            return response.errorResponse(res, 'Invitation not found');
+        }
+
+        if (member.inviteStatus !== 'Pending') {
+            return response.successResponse(res, `You have already responded: ${member.inviteStatus}`);
+        }
+
+        const result = await groupMemberService.respondToGroupInvite(groupId, userId, inviteResponse);
+
+        if (result.modifiedCount > 0) {
+            return response.successResponse(res, `You have successfully ${inviteResponse} the invite`);
+        } else {
+            return response.errorResponse(res, 'Failed to update invite response');
+        }
+
+    } catch (error) {
+        console.error('Controller Invite Error:', error);
+        response.catchError(res, 'Catch Error In Invite', error.message);
+    }
+};
+
+
 
 
 module.exports.getAllData = async (req, res) => {
     try {
         const { status } = req.query
         const mainFilter = {
-            ...({ status: status ? status : { $ne: 'Deleted' } })
+            ...({ status: status ? status : { $ne: 'Deleted' } }),
         }
         const data = await groupMemberService.getAllData(mainFilter)
+        response.successResponse(res, 'Group Member Data List Fetch SuccesFully', data)
+    } catch (error) {
+        console.error('Controller GetAllData Error:', error);
+        response.catchError(res, 'Catch Error In getAllData', error.message)
+    }
+}
+
+module.exports.getNotification = async (req, res) => {
+    try {
+        const { status } = req.query
+        const userId = req.userId
+        const mainFilter = {
+            ...({ status: status ? status : { $ne: 'Deleted' } }),
+            ...(userId ? { userId: new ObjectId(userId) } : {}),
+
+        }
+        const data = await groupMemberService.getNotifications(mainFilter)
         response.successResponse(res, 'Group Member Data List Fetch SuccesFully', data)
     } catch (error) {
         console.error('Controller GetAllData Error:', error);

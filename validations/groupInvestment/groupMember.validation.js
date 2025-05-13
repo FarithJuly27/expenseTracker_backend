@@ -1,11 +1,15 @@
 const Joi = require('joi');
 const { validateBody, validateQuery } = require('../../helper/joiValidations');
 
-const create = Joi.object({
+const inviteMembers = Joi.object({
     groupId: Joi.string().length(24).required(),
-    userId: Joi.string().length(24).required(),
-    role: Joi.string().valid('Admin', 'Member').required(),
-    monthlyTarget: Joi.number().required()
+    memberIds: Joi.array().items(Joi.string()),
+    monthlyTarget: Joi.number().optional()
+});
+
+const inviteResponse = Joi.object({
+    groupId: Joi.string().length(24).required(),
+    inviteResponse: Joi.string().valid().required()
 });
 
 
@@ -29,7 +33,8 @@ const updateStatus = Joi.object({
 
 
 module.exports = {
-    create: validateBody(create),
+    inviteMembers: validateBody(inviteMembers),
+    inviteResponse: validateBody(inviteResponse),
     getAllData: validateQuery(getAllData),
     update: validateBody(update),
     updateStatus: validateBody(updateStatus)

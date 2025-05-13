@@ -3,7 +3,7 @@ const mongoose = require('mongoose')
 const { Types } = mongoose
 const { ObjectId } = Types
 
-const groupMemberSchema = new mongoose.Schema({
+const groupNotificationSchema = new mongoose.Schema({
     groupId: {
         type: ObjectId,
         required: true,
@@ -14,18 +14,22 @@ const groupMemberSchema = new mongoose.Schema({
         required: true,
         ref: 'user'
     },
-    role: {
+    type: {
         type: String,
-        enum: ['Admin', 'Member'],
+        enum: ['Invitation', 'Reminder', 'Updates'],
         required: true
     },
-    monthlyTarget: {
-        type: Number
-    },
-    inviteStatus: {
+    icon: {
         type: String,
-        enum: ['Pending', 'Accepted', 'Rejected'],
-        default: 'Pending'
+        required: true
+    },
+    message: {
+        type: String,
+        required: true
+    },
+    readStatus: {
+        type: Boolean,
+        default: false
     },
     status: {
         type: String,
@@ -54,4 +58,4 @@ const groupMemberSchema = new mongoose.Schema({
     .index({ emailId: 1 })
 
 
-module.exports = mongoose.model('group_members', groupMemberSchema)
+module.exports = mongoose.model('group_notifications', groupNotificationSchema)

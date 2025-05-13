@@ -1,21 +1,93 @@
-const groupMemberModel = require('../../models/groupInvestment/groupMember.model')
+const groupMemberModel = require('../../models/groupInvestment/groupMember.model');
+const groupNotificationModel = require('../../models/groupInvestment/groupNotification.model');
 
-
-module.exports.create = async (req, inputData) => {
+module.exports.inviteMembers = async (req, inputData) => {
     try {
-        const result = new groupMemberModel({
-            ...inputData,
-            createdBy: req.userId,
-            createdAt: new Date()
-        })
-        await result.save()
-        return result
+        const { groupId, memberIds, monthlyTarget } = inputData;
+        const createdBy = req.userId;
 
+        const existingAdmin = await groupMemberModel.findOne({ groupId, userId: createdBy });
+
+        if (!existingAdmin) {
+            const adminEntry = new groupMemberModel({
+                groupId,
+                userId: createdBy,
+                role: 'Admin',
+                monthlyTarget: monthlyTarget || 0,
+                inviteStatus: 'Accepted',
+                status: 'Active',
+                createdBy,
+                createdAt: new Date()
+            });
+            await adminEntry.save();
+        }
+
+        const invites = memberIds
+            .filter(memberId => memberId !== String(createdBy))
+            .map(memberId => ({
+                groupId,
+                userId: memberId,
+                role: 'Member',
+                monthlyTarget: monthlyTarget || 0,
+                inviteStatus: 'Pending',
+                status: 'Inactive',
+                createdBy,
+                createdAt: new Date()
+            }));
+
+        const existingMembers = await groupMemberModel.find({
+            groupId,
+            userId: { $in: memberIds }
+        }).select('userId');
+
+        const existingUserIds = existingMembers.map(m => String(m.userId));
+        const filteredInvites = invites.filter(invite => !existingUserIds.includes(invite.userId));
+
+        if (filteredInvites.length > 0) {
+            await groupMemberModel.insertMany(filteredInvites);
+            const notifications = filteredInvites.map(invite => ({
+                userId: invite.userId,
+                groupId,
+                icon: "https://i.postimg.cc/90TbdjRs/add-friend-5113007.png",
+                type: 'Invitation',
+                message: `You've been invited to join the group.`,
+                createdBy,
+                createdAt: new Date()
+            }));
+
+            await groupNotificationModel.insertMany(notifications);
+        }
+        return { success: true, addedCount: filteredInvites.length };
     } catch (error) {
-        console.error('Service File Error:', error);
+        console.error('Invite Members Service Error:', error);
         return { success: false, message: 'Internal server error', error };
     }
+};
+
+module.exports.MatchInviteMember = async (groupId, userId) => {
+    const member = await groupMemberModel.findOne({ groupId, userId });
+    return member
 }
+
+module.exports.respondToGroupInvite = async (groupId, userId, inviteResponse) => {
+    try {
+        const update = await groupMemberModel.updateOne(
+            { groupId, userId },
+            {
+                $set: {
+                    inviteStatus: inviteResponse,
+                    status: inviteResponse === 'Accepted' ? 'Active' : 'Inactive',
+                    updatedAt: new Date()
+                }
+            }
+        );
+        return update;
+    } catch (error) {
+        console.error('Invite Response Service Error:', error);
+        return { success: false, message: 'Internal server error', error };
+    }
+};
+
 
 module.exports.getAllData = async (mainFilter) => {
     try {
@@ -46,6 +118,7 @@ module.exports.getAllData = async (mainFilter) => {
                     userId: 1,
                     userName: { $first: "$userDetails.userName" },
                     role: 1,
+                    inviteStatus: 1,
                     monthlyTarget: 1,
                     createdAt: 1,
                     createdBy: 1
@@ -59,7 +132,19 @@ module.exports.getAllData = async (mainFilter) => {
         return { success: false, message: 'Internal server error', error };
     }
 }
-
+module.exports.getNotifications = async (mainFilter) => {
+    try {
+        const aggregateQuery = [
+            { $match: mainFilter },
+            { $sort: { createdAt: - 1 } }
+        ]
+        const queryResult = await groupNotificationModel.aggregate(aggregateQuery)
+        return queryResult
+    } catch (error) {
+        console.error('Service File Error:', error);
+        return { success: false, message: 'Internal server error', error };
+    }
+}
 module.exports.update = async (req, _id, updateData) => {
     try {
         const afterUpdate = await groupMemberModel.findByIdAndUpdate(_id, {

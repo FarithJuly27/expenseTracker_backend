@@ -30,34 +30,60 @@ module.exports.getAllData = async (mainFilter) => {
             { $sort: { createdAt: - 1 } },
             {
                 $lookup: {
+                    from: "group_members",
+                    localField: "_id",
+                    foreignField: "groupId",
+                    as: "groupMemberDetails"
+                }
+            },
+            {
+                $lookup: {
                     from: "users",
-                    localField: "members",
+                    localField: "groupMemberDetails.userId",
                     foreignField: "_id",
-                    as: "userDetails"
+                    as: "groupUserDetails"
                 }
             },
             {
                 $addFields: {
-                    members: {
+                    monthlyTarget: { $first: "$groupMemberDetails.monthlyTarget" }
+                }
+            },
+            {
+                $addFields: {
+                    groupDetails: {
                         $map: {
-                            input: {
-                                $filter: {
-                                    input: "$userDetails",
-                                    as: "user",
-                                    cond: { $in: ["$$user._id", "$members"] }
-                                }
-                            },
+                            input: "$groupMemberDetails",
                             as: "member",
                             in: {
-                                _id: "$$member._id",
-                                memberName: "$$member.userName"
+                                memberName: {
+                                    $let: {
+                                        vars: {
+                                            matchedUser: {
+                                                $first: {
+                                                    $filter: {
+                                                        input: "$groupUserDetails",
+                                                        as: "user",
+                                                        cond: { $eq: ["$$user._id", "$$member.userId"] }
+                                                    }
+                                                }
+                                            }
+                                        },
+                                        in: "$$matchedUser.userName"
+                                    }
+                                },
+                                role: "$$member.role",
+                                monthlyTarget:
+                                    "$$member.monthlyTarget",
+                                createdAt: "$$member.createdAt",
+                                createdBy: "$$member.createdBy"
                             }
                         }
                     }
                 }
             },
             {
-                $project: { userDetails: 0 }
+                $project: { groupMemberDetails: 0, groupUserDetails: 0 }
             }
         ]
         const queryResult = await groupModel.aggregate(aggregateQuery)
