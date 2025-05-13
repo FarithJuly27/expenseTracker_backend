@@ -46,14 +46,25 @@ module.exports.getAllData = async (mainFilter) => {
             },
             {
                 $addFields: {
-                    monthlyTarget: { $first: "$groupMemberDetails.monthlyTarget" }
+                    acceptMembers: {
+                        $filter: {
+                            input: "$groupMemberDetails",
+                            as: "member",
+                            cond: { $eq: ["$$member.inviteStatus", "Accepted"] }
+                        }
+                    }
+                }
+            },
+            {
+                $addFields: {
+                    groupBalance: { $sum: "$acceptMembers.monthlyTarget" }
                 }
             },
             {
                 $addFields: {
                     groupDetails: {
                         $map: {
-                            input: "$groupMemberDetails",
+                            input: "$acceptMembers",
                             as: "member",
                             in: {
                                 memberName: {
@@ -64,7 +75,7 @@ module.exports.getAllData = async (mainFilter) => {
                                                     $filter: {
                                                         input: "$groupUserDetails",
                                                         as: "user",
-                                                        cond: { $eq: ["$$user._id", "$$member.userId"] }
+                                                        cond: { $ne: ["$$user._id", "$$member.userId"] }
                                                     }
                                                 }
                                             }
@@ -73,8 +84,8 @@ module.exports.getAllData = async (mainFilter) => {
                                     }
                                 },
                                 role: "$$member.role",
-                                monthlyTarget:
-                                    "$$member.monthlyTarget",
+                                inviteStatus: "$$member.inviteStatus",
+                                monthlyTarget: "$$member.monthlyTarget",
                                 createdAt: "$$member.createdAt",
                                 createdBy: "$$member.createdBy"
                             }
@@ -83,7 +94,7 @@ module.exports.getAllData = async (mainFilter) => {
                 }
             },
             {
-                $project: { groupMemberDetails: 0, groupUserDetails: 0 }
+                $project: { groupMemberDetails: 0, groupUserDetails: 0, acceptMembers: 0 }
             }
         ]
         const queryResult = await groupModel.aggregate(aggregateQuery)
