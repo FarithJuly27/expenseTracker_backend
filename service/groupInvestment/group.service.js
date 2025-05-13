@@ -62,6 +62,11 @@ module.exports.getAllData = async (mainFilter) => {
             },
             {
                 $addFields: {
+                    totalMembers: { $size: "$acceptMembers" }
+                }
+            },
+            {
+                $addFields: {
                     groupDetails: {
                         $map: {
                             input: "$acceptMembers",

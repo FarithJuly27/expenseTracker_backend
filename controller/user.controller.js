@@ -34,11 +34,12 @@ module.exports.login = async (req, res) => {
                 const token = await user.jwt()
                 //res.cookie("token", token, { expires: new Date(Date.now() + 1 * 3600000) })
                 res.cookie("token", token, {
-                    httpOnly: true,               // JS can't access it
-                    sameSite: 'Lax',              // protects against CSRF
-                    secure: false,                // set true only in HTTPS
-                    maxAge: 1 * 60 * 60 * 1000,   // 1 hour in ms
-                  });
+                    httpOnly: true,
+                    secure: true,
+                    sameSite: "Lax",
+                    expires: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000)
+                });
+
                 response.successResponse(res, 'Login SuccessFully', token)
             } else return response.errorResponse(res, 'Invalid Credentials')
         } else {
