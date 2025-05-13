@@ -1,22 +1,36 @@
-const groupModel = require('../../models/groupInvestment/group.model')
-const { userDetails } = require('../user.service')
-
+const groupModel = require('../../models/groupInvestment/group.model');
+const groupMemberModel = require('../../models/groupInvestment/groupMember.model');
 
 module.exports.create = async (req, inputData) => {
     try {
-        const result = new groupModel({
-            ...inputData,
-            createdBy: req.userId,
-            createdAt: new Date()
-        })
-        await result.save()
-        return result
+        const userId = req.userId;
 
+        const newGroup = new groupModel({
+            ...inputData,
+            createdBy: userId,
+            createdAt: new Date()
+        });
+        await newGroup.save();
+
+        const adminEntry = new groupMemberModel({
+            groupId: newGroup._id,
+            userId: userId,
+            role: 'Admin',
+            monthlyTarget: inputData.monthlyTarget || 0,
+            inviteStatus: 'Accepted',
+            status: 'Active',
+            createdBy: userId,
+            createdAt: new Date()
+        });
+        await adminEntry.save();
+
+        return newGroup;
     } catch (error) {
         console.error('Service File Error:', error);
         return { success: false, message: 'Internal server error', error };
     }
-}
+};
+
 
 module.exports.findExist = async (groupName) => {
     const exist = await groupModel.exists({ groupName })

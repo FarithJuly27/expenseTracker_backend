@@ -3,7 +3,7 @@ const { validateBody, validateQuery } = require('../../helper/joiValidations');
 
 const create = Joi.object({
     groupName: Joi.string().min(1).max(30).required(),
-    members: Joi.array().items(Joi.string().length(24)).required(),
+    monthlyTarget: Joi.number().required(),
 });
 
 

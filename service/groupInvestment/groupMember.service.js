@@ -1,26 +1,85 @@
 const groupMemberModel = require('../../models/groupInvestment/groupMember.model');
 const groupNotificationModel = require('../../models/groupInvestment/groupNotification.model');
 
+// module.exports.inviteMembers = async (req, inputData) => {
+//     try {
+//         const { groupId, memberIds, monthlyTarget } = inputData;
+//         const createdBy = req.userId;
+
+//         const existingAdmin = await groupMemberModel.findOne({ groupId, userId: createdBy });
+//         if (!existingAdmin) {
+//             const adminEntry = new groupMemberModel({
+//                 groupId,
+//                 userId: createdBy,
+//                 role: 'Admin',
+//                 monthlyTarget: monthlyTarget || 0,
+//                 inviteStatus: 'Accepted',
+//                 status: 'Active',
+//                 createdBy,
+//                 createdAt: new Date()
+//             });
+//             await adminEntry.save();
+//         }
+
+//         const invites = memberIds
+//             .filter(memberId => memberId !== String(createdBy))
+//             .map(memberId => ({
+//                 groupId,
+//                 userId: memberId,
+//                 role: 'Member',
+//                 monthlyTarget: monthlyTarget || 0,
+//                 inviteStatus: 'Pending',
+//                 status: 'Inactive',
+//                 createdBy,
+//                 createdAt: new Date()
+//             }));
+
+//         const existingMembers = await groupMemberModel.find({
+//             groupId,
+//             userId: { $in: memberIds }
+//         }).select('userId');
+
+//         const existingUserIds = existingMembers.map(m => String(m.userId));
+//         const filteredInvites = invites.filter(invite => !existingUserIds.includes(invite.userId));
+
+//         if (filteredInvites.length > 0) {
+//             await groupMemberModel.insertMany(filteredInvites);
+//             const notifications = filteredInvites.map(invite => ({
+//                 userId: invite.userId,
+//                 groupId,
+//                 icon: "https://i.postimg.cc/90TbdjRs/add-friend-5113007.png",
+//                 type: 'Invitation',
+//                 message: `You've been invited to join the group.`,
+//                 createdBy,
+//                 createdAt: new Date()
+//             }));
+
+//             await groupNotificationModel.insertMany(notifications);
+//         }
+//         return { success: true, addedCount: filteredInvites.length };
+//     } catch (error) {
+//         console.error('Invite Members Service Error:', error);
+//         return { success: false, message: 'Internal server error', error };
+//     }
+// };
+
+module.exports.adminCheck = async (req, groupId) => {
+    const createdBy = req.userId
+    const adminCheck = await groupMemberModel.findOne({
+        groupId,
+        userId: createdBy,
+        role: 'Admin',
+        inviteStatus: 'Accepted',
+        status: 'Active'
+    });
+
+    console.log("adminCheckSevrice", adminCheck)
+    return adminCheck
+}
 module.exports.inviteMembers = async (req, inputData) => {
     try {
         const { groupId, memberIds, monthlyTarget } = inputData;
         const createdBy = req.userId;
-
-        const existingAdmin = await groupMemberModel.findOne({ groupId, userId: createdBy });
-
-        if (!existingAdmin) {
-            const adminEntry = new groupMemberModel({
-                groupId,
-                userId: createdBy,
-                role: 'Admin',
-                monthlyTarget: monthlyTarget || 0,
-                inviteStatus: 'Accepted',
-                status: 'Active',
-                createdBy,
-                createdAt: new Date()
-            });
-            await adminEntry.save();
-        }
 
         const invites = memberIds
             .filter(memberId => memberId !== String(createdBy))
@@ -43,20 +102,24 @@ module.exports.inviteMembers = async (req, inputData) => {
         const existingUserIds = existingMembers.map(m => String(m.userId));
         const filteredInvites = invites.filter(invite => !existingUserIds.includes(invite.userId));
 
+
         if (filteredInvites.length > 0) {
             await groupMemberModel.insertMany(filteredInvites);
+
             const notifications = filteredInvites.map(invite => ({
                 userId: invite.userId,
                 groupId,
                 icon: "https://i.postimg.cc/90TbdjRs/add-friend-5113007.png",
                 type: 'Invitation',
                 message: `You've been invited to join the group.`,
+                readStatus: false,
                 createdBy,
                 createdAt: new Date()
             }));
 
             await groupNotificationModel.insertMany(notifications);
         }
+
         return { success: true, addedCount: filteredInvites.length };
     } catch (error) {
         console.error('Invite Members Service Error:', error);
@@ -133,6 +196,7 @@ module.exports.getAllData = async (mainFilter) => {
     }
 }
 module.exports.getNotifications = async (mainFilter) => {
+    console.log(mainFilter)
     try {
         const aggregateQuery = [
             { $match: mainFilter },
