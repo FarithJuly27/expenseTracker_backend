@@ -210,9 +210,21 @@ module.exports.getNotifications = async (mainFilter) => {
             {
                 $lookup: {
                     from: "group_members",
-                    localField: "_id",
+                    localField: "groupId",
                     foreignField: "groupId",
                     as: "groupMemberDetails"
+                }
+            },
+            {
+                $addFields: {
+                    inviteStatus: {
+                        $first: "$groupMemberDetails.inviteStatus"
+                    }
+                }
+            },
+            {
+                $project: {
+                    groupMemberDetails: 0
                 }
             }
         ]

@@ -78,7 +78,7 @@ module.exports.getNotification = async (req, res) => {
         const userId = req.userId
         const mainFilter = {
             ...({ status: status ? status : { $ne: 'Deleted' } }),
-            ...(userId ? { userId: new ObjectId(userId) } : {}),
+            ...(userId ? { userId: new ObjectId(userId) } : {})
 
         }
         const data = await groupMemberService.getNotifications(mainFilter)
