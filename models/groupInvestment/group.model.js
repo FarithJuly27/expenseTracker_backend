@@ -7,9 +7,8 @@ const groupInvestmentSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    members: {
-        type: [ObjectId],
-        required: true
+    monthlyTarget: {
+        type: Number
     },
     status: {
         type: String,

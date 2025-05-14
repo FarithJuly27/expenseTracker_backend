@@ -1,29 +1,32 @@
 const groupModel = require('../../models/groupInvestment/group.model');
 const groupMemberModel = require('../../models/groupInvestment/groupMember.model');
+const userModel = require('../../models/user.model');
 
 module.exports.create = async (req, inputData) => {
     try {
-        const userId = req.userId;
+        const createdBy = req.userId;
+        const user = await userModel.findOne({ _id: createdBy }).select('userName')
+        console.log(user)
 
         const newGroup = new groupModel({
             ...inputData,
-            createdBy: userId,
+            createdBy,
             createdAt: new Date()
         });
         await newGroup.save();
 
         const adminEntry = new groupMemberModel({
             groupId: newGroup._id,
-            userId: userId,
+            userId: createdBy,
+            memberName: user.userName,
             role: 'Admin',
             monthlyTarget: inputData.monthlyTarget || 0,
             inviteStatus: 'Accepted',
             status: 'Active',
-            createdBy: userId,
+            createdBy,
             createdAt: new Date()
         });
         await adminEntry.save();
-
         return newGroup;
     } catch (error) {
         console.error('Service File Error:', error);
@@ -48,14 +51,6 @@ module.exports.getAllData = async (mainFilter) => {
                     localField: "_id",
                     foreignField: "groupId",
                     as: "groupMemberDetails"
-                }
-            },
-            {
-                $lookup: {
-                    from: "users",
-                    localField: "groupMemberDetails.userId",
-                    foreignField: "_id",
-                    as: "groupUserDetails"
                 }
             },
             {
@@ -86,22 +81,7 @@ module.exports.getAllData = async (mainFilter) => {
                             input: "$acceptMembers",
                             as: "member",
                             in: {
-                                memberName: {
-                                    $let: {
-                                        vars: {
-                                            matchedUser: {
-                                                $first: {
-                                                    $filter: {
-                                                        input: "$groupUserDetails",
-                                                        as: "user",
-                                                        cond: { $ne: ["$$user._id", "$$member.userId"] }
-                                                    }
-                                                }
-                                            }
-                                        },
-                                        in: "$$matchedUser.userName"
-                                    }
-                                },
+                                memberName: "$$member.memberName",
                                 role: "$$member.role",
                                 inviteStatus: "$$member.inviteStatus",
                                 monthlyTarget: "$$member.monthlyTarget",

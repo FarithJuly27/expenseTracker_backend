@@ -8,7 +8,6 @@ module.exports.inviteMembers = async (req, res) => {
     try {
         const inputData = req.body;
         const adminCheck = await groupMemberService.adminCheck(req, inputData.groupId)
-        console.log("adminCheck", adminCheck)
         if (!adminCheck) {
             return response.errorResponse(res, 'Only Admins can invite members.')
         }

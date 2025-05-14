@@ -14,6 +14,10 @@ const groupMemberSchema = new mongoose.Schema({
         required: true,
         ref: 'user'
     },
+    memberName: {
+        type: String,
+        required: true
+    },
     role: {
         type: String,
         enum: ['Admin', 'Member'],
