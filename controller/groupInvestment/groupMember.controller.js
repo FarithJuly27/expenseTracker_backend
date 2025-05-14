@@ -14,8 +14,14 @@ module.exports.inviteMembers = async (req, res) => {
         const result = await groupMemberService.inviteMembers(req, inputData);
         console.log(result)
         if (result.success) {
-            response.successResponse(res, 'Group members invited successfully', {
-                addedCount: result.addedCount
+            let message = `Group members invited successfully.`;
+            if (result.alreadyInvited && result.alreadyInvited.length > 0) {
+                message += ` Some members were already invited: ${result.alreadyInvited.join(', ')}`;
+            }
+
+            return response.successResponse(res, message, {
+                addedCount: result.addedCount,
+                alreadyInvited: result.alreadyInvited
             });
         } else {
             response.errorResponse(res, 'Group member invitation failed');
@@ -81,7 +87,7 @@ module.exports.getNotification = async (req, res) => {
             ...(userId ? { userId: new ObjectId(userId) } : {})
 
         }
-        const data = await groupMemberService.getNotifications(mainFilter)
+        const data = await groupMemberService.getNotifications(req, mainFilter)
         response.successResponse(res, 'Group Member Data List Fetch SuccesFully', data)
     } catch (error) {
         console.error('Controller GetAllData Error:', error);

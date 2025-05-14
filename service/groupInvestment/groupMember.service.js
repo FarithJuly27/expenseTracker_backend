@@ -1,3 +1,4 @@
+const groupModel = require('../../models/groupInvestment/group.model');
 const groupMemberModel = require('../../models/groupInvestment/groupMember.model');
 const groupNotificationModel = require('../../models/groupInvestment/groupNotification.model');
 const userModel = require('../../models/user.model');
@@ -79,9 +80,13 @@ module.exports.adminCheck = async (req, groupId) => {
 }
 module.exports.inviteMembers = async (req, inputData) => {
     try {
-        const { groupId, memberIds, monthlyTarget } = inputData;
+        const { groupId, memberIds } = inputData;
         const createdBy = req.userId;
-
+        const groups = await groupModel.find({ _id: { $in: groupId } }).select('monthlyTarget')
+        const groupMap = {}
+        groups.forEach(group => {
+            groupMap[group._id.toString()] = group.monthlyTarget
+        })
         const users = await userModel.find({ _id: { $in: memberIds } }).select('userName');
         const userMap = {};
         users.forEach(user => {
@@ -95,7 +100,7 @@ module.exports.inviteMembers = async (req, inputData) => {
                 userId: memberId,
                 memberName: userMap[memberId] || 'Unknown',
                 role: 'Member',
-                monthlyTarget: monthlyTarget || 0,
+                monthlyTarget: groupMap[groupId] || 0,
                 inviteStatus: 'Pending',
                 status: 'Inactive',
                 createdBy,
@@ -125,7 +130,7 @@ module.exports.inviteMembers = async (req, inputData) => {
 
             await groupNotificationModel.insertMany(notifications);
         }
-        return { success: true, addedCount: filteredInvites.length };
+        return { success: true, addedCount: filteredInvites.length, alreadyInvited: existingUserIds };
     } catch (error) {
         console.error('Invite Members Service Error:', error);
         return { success: false, message: 'Internal server error', error };
@@ -201,8 +206,8 @@ module.exports.getAllData = async (mainFilter) => {
         return { success: false, message: 'Internal server error', error };
     }
 }
-module.exports.getNotifications = async (mainFilter) => {
-    console.log(mainFilter)
+module.exports.getNotifications = async (req, mainFilter) => {
+    const userId = req.userId
     try {
         const aggregateQuery = [
             { $match: mainFilter },
@@ -217,14 +222,32 @@ module.exports.getNotifications = async (mainFilter) => {
             },
             {
                 $addFields: {
+                    userGroupMember: {
+                        $filter: {
+                            input: "$groupMemberDetails",
+                            as: "member",
+                            cond: {
+                                $eq: ["$$member.userId", userId]
+                            }
+                        }
+                    }
+                }
+            },
+            {
+                $addFields: {
                     inviteStatus: {
-                        $first: "$groupMemberDetails.inviteStatus"
+                        $cond: [
+                            { $gt: [{ $size: "$userGroupMember" }, 0] },
+                            { $arrayElemAt: ["$userGroupMember.inviteStatus", 0] },
+                            null
+                        ]
                     }
                 }
             },
             {
                 $project: {
-                    groupMemberDetails: 0
+                    groupMemberDetails: 0,
+                    userGroupMember: 0
                 }
             }
         ]

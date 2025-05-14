@@ -4,7 +4,6 @@ const { validateBody, validateQuery } = require('../../helper/joiValidations');
 const inviteMembers = Joi.object({
     groupId: Joi.string().length(24).required(),
     memberIds: Joi.array().items(Joi.string()),
-    monthlyTarget: Joi.number().optional()
 });
 
 const inviteResponse = Joi.object({
