@@ -40,6 +40,15 @@ module.exports.findExist = async (groupName) => {
     return exist
 }
 
+module.exports.getGroupMember = async (userId) => {
+    const member = await groupMemberModel.distinct('groupId', {
+        inviteStatus: "Accepted",
+        userId: userId
+    })
+    console.log("member", member)
+    return member
+}
+
 module.exports.getAllData = async (mainFilter) => {
     try {
         const aggregateQuery = [

@@ -18,8 +18,13 @@ module.exports.create = async (req, res) => {
 module.exports.getAllData = async (req, res) => {
     try {
         const { status } = req.query
+        const userId = req.userId
+        const acceptedGroupIds = await groupService.getGroupMember(userId);
+
         const mainFilter = {
-            ...({ status: status ? status : { $ne: 'Deleted' } })
+            ...({ status: status ? status : { $ne: 'Deleted' } }),
+            _id: { $in: acceptedGroupIds },
+
         }
         const data = await groupService.getAllData(mainFilter)
         response.successResponse(res, 'Group Data List Fetch SuccesFully', data)

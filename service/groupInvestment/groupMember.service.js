@@ -214,6 +214,14 @@ module.exports.getNotifications = async (req, mainFilter) => {
             { $sort: { createdAt: - 1 } },
             {
                 $lookup: {
+                    from: "groups",
+                    localField: "groupId",
+                    foreignField: "_id",
+                    as: "groupDetails"
+                }
+            },
+            {
+                $lookup: {
                     from: "group_members",
                     localField: "groupId",
                     foreignField: "groupId",
@@ -241,13 +249,17 @@ module.exports.getNotifications = async (req, mainFilter) => {
                             { $arrayElemAt: ["$userGroupMember.inviteStatus", 0] },
                             null
                         ]
+                    },
+                    groupName: {
+                        $first: "$groupDetails.groupName"
                     }
                 }
             },
             {
                 $project: {
                     groupMemberDetails: 0,
-                    userGroupMember: 0
+                    userGroupMember: 0,
+                    groupDetails: 0
                 }
             }
         ]
