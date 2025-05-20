@@ -12,20 +12,25 @@ const investmentSchema = new mongoose.Schema({
         type: ObjectId,
         required: true
     },
-    investmentType: {
-        type: String,
-        required: true
-    },
     amount: {
         type: Number,
         required: true
     },
+    // expectedDate: {
+    //     type: Date,
+    //     required: true
+    // },
     investmentDate: {
         type: Date,
         required: true
     },
     notes: {
         type: String
+    },
+    paymentStatus: {
+        type: String,
+        enum: ['Paid', 'Unpaid'],
+        default: 'Unpaid'
     },
     status: {
         type: String,
@@ -53,4 +58,4 @@ const investmentSchema = new mongoose.Schema({
     .index({ emailId: 1 })
 
 
-module.exports = mongoose.model('investment', investmentSchema)
+module.exports = mongoose.model('group_transactions', investmentSchema)

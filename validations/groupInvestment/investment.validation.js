@@ -1,14 +1,13 @@
 const Joi = require('joi');
 const { validateBody, validateQuery } = require('../../helper/joiValidations');
 
-const create = Joi.object({
+const createMany = Joi.array().items(Joi.object({
     groupId: Joi.string().length(24).required(),
     userId: Joi.string().length(24).required(),
-    investmentType: Joi.string().required(),
     amount: Joi.number().required(),
     investmentDate: Joi.date().required(),
     notes: Joi.string()
-});
+}));
 
 
 const getAllData = Joi.object({
@@ -34,7 +33,7 @@ const updateStatus = Joi.object({
 
 
 module.exports = {
-    create: validateBody(create),
+    createMany: validateBody(createMany),
     getAllData: validateQuery(getAllData),
     update: validateBody(update),
     updateStatus: validateBody(updateStatus)

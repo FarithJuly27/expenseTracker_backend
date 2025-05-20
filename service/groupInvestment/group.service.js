@@ -51,6 +51,7 @@ module.exports.getGroupMember = async (userId) => {
 
 module.exports.getAllData = async (mainFilter) => {
     try {
+        console.log(mainFilter)
         const aggregateQuery = [
             { $match: mainFilter },
             { $sort: { createdAt: - 1 } },

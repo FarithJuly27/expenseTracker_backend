@@ -1,12 +1,12 @@
 const response = require('../../helper/response')
 const investmentService = require('../../service/groupInvestment/investment.service')
 
-module.exports.create = async (req, res) => {
+module.exports.createMany = async (req, res) => {
     try {
-        const { ...inputData } = req.body
-        const result = await investmentService.create(req, inputData)
-        if (result._id) {
-            response.successResponse(res, 'Group Member Created SuccessFully', result)
+        const inputData = req.body
+        const result = await investmentService.createMany(req, inputData)
+        if (Array.isArray(result) && result.length > 0) {
+            response.successResponse(res, 'Group Transaction Created SuccessFully', result)
         } else return response.errorResponse(res, 'Group Member Creation Failed')
     } catch (error) {
         console.error('Controller Signup Error:', error);

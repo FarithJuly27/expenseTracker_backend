@@ -1,5 +1,8 @@
 const response = require('../../helper/response')
 const groupService = require('../../service/groupInvestment/group.service')
+const mongoose = require('mongoose')
+const { Types } = mongoose
+const { ObjectId } = Types
 
 module.exports.create = async (req, res) => {
     try {
@@ -17,12 +20,14 @@ module.exports.create = async (req, res) => {
 
 module.exports.getAllData = async (req, res) => {
     try {
-        const { status } = req.query
+        const { status, groupId } = req.query
+        console.log(req.query)
         const userId = req.userId
         const acceptedGroupIds = await groupService.getGroupMember(userId);
 
         const mainFilter = {
             ...({ status: status ? status : { $ne: 'Deleted' } }),
+            ...(groupId ? { _id: new ObjectId(groupId) } : {}),
             _id: { $in: acceptedGroupIds },
 
         }

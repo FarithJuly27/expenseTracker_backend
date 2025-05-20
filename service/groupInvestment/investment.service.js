@@ -1,16 +1,15 @@
 const investmentModel = require('../../models/groupInvestment/investments.model')
 
-
-module.exports.create = async (req, inputData) => {
+module.exports.createMany = async (req, inputData) => {
+    console.log(inputData)
     try {
-        const result = new investmentModel({
-            ...inputData,
+        const multipleData = inputData.map(item => ({
+            ...item,
             createdBy: req.userId,
             createdAt: new Date()
-        })
-        await result.save()
+        }))
+        const result = await investmentModel.insertMany(multipleData)
         return result
-
     } catch (error) {
         console.error('Service File Error:', error);
         return { success: false, message: 'Internal server error', error };

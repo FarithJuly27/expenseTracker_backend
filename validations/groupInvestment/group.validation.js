@@ -8,7 +8,8 @@ const create = Joi.object({
 
 
 const getAllData = Joi.object({
-    status: Joi.string().valid('Active', 'InActive').optional()
+    status: Joi.string().valid('Active', 'InActive').optional(),
+    groupId: Joi.string().length(24).optional()
 })
 
 const update = Joi.object({

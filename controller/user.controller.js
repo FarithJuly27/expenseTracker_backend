@@ -37,7 +37,7 @@ module.exports.login = async (req, res) => {
                     httpOnly: true,
                     secure: true,
                     sameSite: "Lax",
-                    expires: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000)
+                    expires: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000)
                 });
 
                 response.successResponse(res, 'Login SuccessFully', token)
