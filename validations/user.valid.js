@@ -4,7 +4,8 @@ const { validateBody, validateQuery, validateParams } = require('../helper/joiVa
 const signup = Joi.object({
     userName: Joi.string().min(3).max(30).required(),
     emailId: Joi.string().email().required(),
-    password: Joi.string().min(6).required()
+    password: Joi.string().min(6).required(),
+    profileImage: Joi.string()
 });
 
 
