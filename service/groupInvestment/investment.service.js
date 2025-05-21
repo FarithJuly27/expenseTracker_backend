@@ -32,10 +32,10 @@ module.exports.getAllData = async (mainFilter) => {
             },
             {
                 $lookup: {
-                    from: "users",
-                    localField: "userId",
+                    from: "group_members",
+                    localField: "memberId",
                     foreignField: "_id",
-                    as: "userDetails"
+                    as: "membersDetails"
                 }
             },
             {
@@ -43,8 +43,8 @@ module.exports.getAllData = async (mainFilter) => {
                     _id: 1,
                     groupId: 1,
                     groupName: { $first: "$groupDetails.groupName" },
-                    userId: 1,
-                    userName: { $first: "$userDetails.userName" },
+                    memberId: 1,
+                    memberName: { $first: "$membersDetails.memberName" },
                     investmentType: 1,
                     investmentDate: 1,
                     amount: 1,
@@ -52,6 +52,7 @@ module.exports.getAllData = async (mainFilter) => {
                     createdAt: 1
                 }
             }
+
         ]
         const queryResult = await investmentModel.aggregate(aggregateQuery)
         return queryResult
