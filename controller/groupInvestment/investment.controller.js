@@ -32,10 +32,13 @@ module.exports.getAllData = async (req, res) => {
 module.exports.update = async (req, res) => {
     try {
         const { _id, ...updateData } = req.body
+        const userId = req.userId
+        const isAdmin = await investmentService.getGroupMember(updateData.groupId, userId)
+        if (!isAdmin) return response.errorResponse(res, "You can't access this update. Admins only.");
         const result = await investmentService.update(req, _id, updateData)
         console.log(result)
         if (result) {
-            response.successResponse(res, 'Group Member Updated SuccesFully', result)
+            response.successResponse(res, 'Group Member Updated SuccesFully')
         } else return response.errorResponse(res, 'Group Member Update Failed')
     } catch (error) {
         console.error('Controller update Error:', error);

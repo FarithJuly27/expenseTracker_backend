@@ -17,8 +17,7 @@ const getAllData = Joi.object({
 const update = Joi.object({
     _id: Joi.string().length(24).required(),
     groupId: Joi.string().length(24).optional(),
-    userId: Joi.string().length(24).optional(),
-    investmentType: Joi.string().optional(),
+    memberId: Joi.string().length(24).optional(),
     amount: Joi.number().optional(),
     investmentDate: Joi.date().optional(),
     notes: Joi.string()

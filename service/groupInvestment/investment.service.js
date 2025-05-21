@@ -1,3 +1,4 @@
+const groupMemberModel = require('../../models/groupInvestment/groupMember.model')
 const investmentModel = require('../../models/groupInvestment/investments.model')
 
 module.exports.createMany = async (req, inputData) => {
@@ -59,6 +60,14 @@ module.exports.getAllData = async (mainFilter) => {
         return { success: false, message: 'Internal server error', error };
     }
 }
+
+module.exports.getGroupMember = async (groupId, userId) => {
+    console.log("groupId", groupId);
+    const member = await groupMemberModel.findOne({ groupId, userId, role: "Admin" });
+    console.log(member);
+    return member;
+}
+
 
 module.exports.update = async (req, _id, updateData) => {
     try {
