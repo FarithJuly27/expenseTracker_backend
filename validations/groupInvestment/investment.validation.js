@@ -3,7 +3,7 @@ const { validateBody, validateQuery } = require('../../helper/joiValidations');
 
 const createMany = Joi.array().items(Joi.object({
     groupId: Joi.string().length(24).required(),
-    userId: Joi.string().length(24).required(),
+    memberId: Joi.string().length(24).required(),
     amount: Joi.number().required(),
     investmentDate: Joi.date().required(),
     notes: Joi.string()

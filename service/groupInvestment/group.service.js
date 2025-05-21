@@ -91,6 +91,7 @@ module.exports.getAllData = async (mainFilter) => {
                             input: "$acceptMembers",
                             as: "member",
                             in: {
+                                _id: "$$member._id",
                                 memberName: "$$member.memberName",
                                 role: "$$member.role",
                                 inviteStatus: "$$member.inviteStatus",

@@ -8,7 +8,7 @@ const investmentSchema = new mongoose.Schema({
         type: ObjectId,
         required: true
     },
-    userId: {
+    memberId: {
         type: ObjectId,
         required: true
     },
@@ -30,7 +30,7 @@ const investmentSchema = new mongoose.Schema({
     paymentStatus: {
         type: String,
         enum: ['Paid', 'Unpaid'],
-        default: 'Unpaid'
+        default: 'Paid'
     },
     status: {
         type: String,
