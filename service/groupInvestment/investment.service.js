@@ -47,6 +47,7 @@ module.exports.getAllData = async (mainFilter) => {
                     memberName: { $first: "$membersDetails.memberName" },
                     investmentType: 1,
                     investmentDate: 1,
+                    notes: 1,
                     amount: 1,
                     createdBy: 1,
                     createdAt: 1

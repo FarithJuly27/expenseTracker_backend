@@ -12,6 +12,12 @@ module.exports = {
       messgae,
     });
   },
+  invalidTokenError: (res, messgae) => {
+    return res.status(401).json({
+      status: false,
+      messgae,
+    });
+  },
   alreadyExist: (res, message = "Already exists") => {
     return res.status(409).json({
       success: false,

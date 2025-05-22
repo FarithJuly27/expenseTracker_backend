@@ -8,7 +8,7 @@ const checkAuth = async (req, res, next) => {
     try {
         const { token } = req.cookies
         if (!token) {
-            return response.errorResponse(res, 'Invalid Token')
+            return response.invalidTokenError(res, 'Invalid Token')
         }
         const decodeMessage = await jwt.verify(token, SECRET_KEY)
         const { _id } = decodeMessage
