@@ -151,7 +151,7 @@ module.exports.respondToGroupInvite = async (groupId, userId, inviteResponse) =>
                 $set: {
                     inviteStatus: inviteResponse,
                     status: inviteResponse === 'Accepted' ? 'Active' : 'Inactive',
-                    updatedAt: new Date()
+                    joinedDate: new Date()
                 }
             }
         );
