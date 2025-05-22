@@ -54,7 +54,7 @@ module.exports.getAllData = async (mainFilter) => {
         console.log(mainFilter)
         const aggregateQuery = [
             { $match: mainFilter },
-            { $sort: { createdAt: - 1 } },
+            { $sort: { createdAt: -1 } },
             {
                 $lookup: {
                     from: "group_members",
@@ -76,7 +76,20 @@ module.exports.getAllData = async (mainFilter) => {
             },
             {
                 $addFields: {
-                    groupBalance: { $sum: "$acceptMembers.monthlyTarget" }
+                    existingInvestAmount: {
+                        $first: "$existingInvestment.investAmount"
+                    }
+                }
+            },
+            {
+                $addFields: {
+                    groupBalance: {
+                        $add: [
+
+                            { $ifNull: ["$existTotalAmount", 0] },
+                            { $ifNull: ["$existingInvestAmount", 0] }
+                        ]
+                    }
                 }
             },
             {
@@ -95,7 +108,8 @@ module.exports.getAllData = async (mainFilter) => {
                                 memberName: "$$member.memberName",
                                 role: "$$member.role",
                                 inviteStatus: "$$member.inviteStatus",
-                                monthlyTarget: "$$member.monthlyTarget",
+                                monthlyTarget:
+                                    "$$member.monthlyTarget",
                                 createdAt: "$$member.createdAt",
                                 createdBy: "$$member.createdBy"
                             }
@@ -104,7 +118,12 @@ module.exports.getAllData = async (mainFilter) => {
                 }
             },
             {
-                $project: { groupMemberDetails: 0, groupUserDetails: 0, acceptMembers: 0 }
+                $project: {
+                    groupMemberDetails: 0,
+                    groupUserDetails: 0,
+                    acceptMembers: 0,
+                    existingInvestAmount: 0
+                }
             }
         ]
         const queryResult = await groupModel.aggregate(aggregateQuery)

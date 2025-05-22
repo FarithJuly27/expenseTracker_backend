@@ -4,6 +4,21 @@ const { validateBody, validateQuery } = require('../../helper/joiValidations');
 const create = Joi.object({
     groupName: Joi.string().min(1).max(30).required(),
     monthlyTarget: Joi.number().required(),
+    existTotalAmount: Joi.number(),
+    existInvest: Joi.boolean().default(false),
+    existingInvestment: Joi.alternatives().conditional('existInvest', {
+        is: true,
+        then: Joi.array().items(
+            Joi.object({
+                investmentType: Joi.string().valid('Gold', 'Stock', 'Crypto', 'Other').required(),
+                quantity: Joi.string().required(),
+                investAmount: Joi.number().required(),
+                investDate: Joi.date().required(),
+                notes: Joi.string().optional()
+            })
+        ).min(1).required(),
+        otherwise: Joi.forbidden()
+    })
 });
 
 
